@@ -1,1 +1,1 @@
-11-directories
+18-letteronly
