@@ -1,42 +1,64 @@
 #!/usr/bin/env bash
-# Manages the script manage_my_process.
-#   When passed the argument `start`:
-#     1. Starts manage_my_process
-#     2. Creates a file containings its PID in /var/run/my_process.pid
-#     3. Displays "manage_my_process started"
-#   When passed the argument `stop`:
-#     1. Stops manage_my_process
-#     2. Deletes the file /var/run/my_process.pid
-#     3. Displays "manage_my_process stopped"
-#   When passed the argument `restart`:
-#     1. Stops manage_my_process
-#     2. Deletes the file /var/run/my_process.pid
-#     3. Starts manage_my_process
-#     4. Creates a file containing its PID in /var/run/my_process.pid
-#     5. Displays "manage_my_process restarted"
-#   If any other or no arguments are passed, displays
-#+  "Usage: manage_my_process {start|stop|restart}"
 
-if [ "$1" == "start" ]
-then
-  ./manage_my_process &
-  echo $$ > /var/run/my_process.pid
-  echo "manage_my_process started"
+# This script manages the manage_my_process script
 
-elif [ "$1" == "stop" ]
-then
-  kill "$(pgrep -f /manage_my_process)" 
-  rm /var/run/my_process.pid
-  echo "manage_my_process stopped"
+# Define the path to the PID file
+PIDFILE=/var/run/my_process.pid
 
-elif [ "$1" == "restart" ]
-then
-  kill "$(pgrep -f /manage_my_process)"
-  rm /var/run/my_process.pid
-  ./manage_my_process &
-  echo $$ > /var/run/my_process.pid
+# Define a function to start the process
+start() {
+  # Check if the process is already running
+  if [ -e $PIDFILE ]
+  then
+    echo "manage_my_process is already running. PID: $(cat $PIDFILE)"
+    return
+  fi
+
+  # Start the process
+  nohup ./manage_my_process.sh > /dev/null 2>&1 &
+  PID=$!
+  echo $PID > $PIDFILE
+  echo "manage_my_process started. PID: $PID"
+}
+
+# Define a function to stop the process
+stop() {
+  # Check if the PID file exists
+  if [ ! -e $PIDFILE ]
+  then
+    echo "manage_my_process is not running"
+    return
+  fi
+
+  # Stop the process
+  PID=$(cat $PIDFILE)
+  kill $PID
+  rm $PIDFILE
+  echo "manage_my_process stopped. PID: $PID"
+}
+
+# Define a function to restart the process
+restart() {
+  stop
+  start
   echo "manage_my_process restarted"
+}
 
-else
-  echo "Usage: manage_my_process {start|stop|restart}"
-fi
+# Check the argument passed to the script
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
