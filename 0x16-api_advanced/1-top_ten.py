@@ -1,21 +1,21 @@
 #!/usr/bin/python3
-"""Toget the top ten subbredit api"""
+"""Function to print hot posts on a given Reddit subreddit."""
 import requests
 
 
 def top_ten(subreddit):
-    """list the top 10 reddit api"""
-    if subreddit is None or type(subreddit) != str:
-        print('None')
+    """Print the titles of the 10 hottest posts on a given subreddit."""
+    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
+    }
+    params = {
+        "limit": 10
+    }
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+    if response.status_code == 404:
+        print("None")
         return
-    params = {'limit': 10}
-    headers = {'User-Agent': 'Reddit apI'}
-    url = "http://www.reddit.com/r/{}/top/.json".format(subreddit)
-    res = requests.get(url, params=params,
-                       headers=headers)
-    if res.status_code != 200:
-        print('None')
-        return
-    resp = res.json().get('data').get('children')
-    for child in resp:
-        print(child.get('data').get('title'))
+    results = response.json().get("data")
+    [print(c.get("data").get("title")) for c in results.get("children")]
