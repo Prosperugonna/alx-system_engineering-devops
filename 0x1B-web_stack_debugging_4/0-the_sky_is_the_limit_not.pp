@@ -1,14 +1,13 @@
-# Slve why our server is failing
-include stdlib
+# Increases the amount of traffic an Nginx server can handle.
 
-file_line { 'allow many requests':
-  ensure  => present,
-  path    => '/etc/default/nginx',
-  line    => 'LIMIT="-n 4096"',
-  replace => true
-}
+# Increase the ULIMIT of the default file
+exec { 'fix--for-nginx':
+  command => 'sed -i "s/15/4096/" /etc/default/nginx',
+  path    => '/usr/local/bin/:/bin/'
+} ->
 
-exec { 'restart nginx':
-  command  => 'sudo service nginx restart',
-  provider => shell
+# Restart Nginx
+exec { 'nginx-restart':
+  command => 'nginx restart',
+  path    => '/etc/init.d/'
 }
